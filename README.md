@@ -157,16 +157,6 @@ Gera boletim epidemiológico em HTML. Aceita parâmetros personalizados (agravo,
 
 ---
 
-## Publicação Científica
-
-Este pacote implementa a metodologia apresentada no trabalho premiado na **EXPOEPI 2026** (Prêmio Dionísio Herrera):
-
-> *Nowcasting bayesiano para correção de atraso de notificação de arboviroses no SINAN*
-
-**Autor:** Marcos Malveira — SESACRE
-
----
-
 ## Contribuindo
 
 Contribuições são bem-vindas!
