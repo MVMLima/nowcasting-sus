@@ -7,7 +7,7 @@
 
 **Nowcasting bayesiano para dados do SINAN** — correção de atraso de notificação em tempo real usando PyMC.
 
-> ⚕️ Desenvolvido na SESACRE, vencedor do Prêmio Dionísio Herrera (EXPOEPI 2026).
+> ⚕️ Desenvolvido no Departamento de Vigilância em Saúde da Secretaria de Estado de Saúde do Acre
 > Agora open source para qualquer equipe de vigilância do Brasil.
 
 ---
