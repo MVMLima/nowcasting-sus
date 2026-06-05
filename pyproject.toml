@@ -33,3 +33,15 @@ Documentation = "https://github.com/MVMLima/nowcasting-sus#readme"
 
 [project.scripts]
 nowcasting-report = "nowcasting_sus.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::FutureWarning",
+    "ignore::UserWarning",
+]
