@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nowcasting-sus"
+version = "1.0.0"
+description = "Nowcasting bayesiano para dados do SINAN — correção de atraso de notificação em tempo real"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Marcos Malveira", email = "mvmlima@hotmail.com"}
+]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "matplotlib>=3.7",
+    "pymc>=5.0",
+    "arviz>=0.16",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+
+[project.urls]
+Homepage = "https://github.com/MVMLima/nowcasting-sus"
+Documentation = "https://github.com/MVMLima/nowcasting-sus#readme"
+
+[project.scripts]
+nowcasting-report = "nowcasting_sus.cli:main"
