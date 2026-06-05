@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 import numpy as np
-import pandas as pd
 import pytest
 
 

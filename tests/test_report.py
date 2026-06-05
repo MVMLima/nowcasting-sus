@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 
 import numpy as np
-import pytest
 
 from nowcasting_sus.report import generate_report
 

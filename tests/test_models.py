@@ -140,8 +140,6 @@ class TestNowcastingModelDOW:
         obs_t = np.array([0, 1, 2], dtype=int)
         obs_d = np.array([0, 0, 1], dtype=int)
         counts = np.array([3, 2, 1], dtype=int)
-        dow = np.array([0, 1, 2, 3, 4, 5, 6, 0, 1, 2], dtype=int)
-
         model = NowcastingModelDOW()
         # Without dow kwarg should raise TypeError
         with pytest.raises(TypeError):

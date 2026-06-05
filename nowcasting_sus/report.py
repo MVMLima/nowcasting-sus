@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Optional
 
 import numpy as np
@@ -10,6 +11,8 @@ import pandas as pd
 from nowcasting_sus import __version__ as _PKG_VERSION
 
 __all__ = ["generate_report"]
+
+logger = logging.getLogger("nowcasting_sus.report")
 
 
 def generate_report(
@@ -34,10 +37,14 @@ def generate_report(
         Estimativas nowcast.
     dates : array-like
         Datas de onset.
-    agravo, uf, cid : str
-        Metadados epidemiológicos.
+    agravo : str
+        Nome do agravo (default: ``"Chikungunya"``).
+    uf : str
+        Unidade federativa (default: ``"Bahia"``).
+    cid : str
+        Código CID-10 (default: ``"A92.0"``).
     total_observado : int, optional
-        Total de casos observados. Se None, calcula da matriz.
+        Total de casos observados. Se ``None``, calcula da matriz.
     save_to : str, optional
         Caminho para salvar o HTML.
 
@@ -45,8 +52,34 @@ def generate_report(
     -------
     str
         HTML do boletim.
+
+    Raises
+    ------
+    ValueError
+        Se os arrays de entrada tiverem tamanhos incompatíveis.
     """
+    # Validação básica
     observed = n_matrix.sum(axis=1)
+    n_dates = len(dates)
+    if len(nowcast_median) != n_dates:
+        raise ValueError(
+            f"nowcast_median tem {len(nowcast_median)} elementos, "
+            f"mas dates tem {n_dates}"
+        )
+    if len(nowcast_low) != n_dates:
+        raise ValueError(
+            f"nowcast_low tem {len(nowcast_low)} elementos, mas dates tem {n_dates}"
+        )
+    if len(nowcast_high) != n_dates:
+        raise ValueError(
+            f"nowcast_high tem {len(nowcast_high)} elementos, mas dates tem {n_dates}"
+        )
+    if len(observed) != n_dates:
+        raise ValueError(
+            f"n_matrix tem {n_matrix.shape[0]} linhas, "
+            f"mas dates tem {n_dates}"
+        )
+
     total_obs = total_observado or int(observed.sum())
     total_nowcast = int(nowcast_median.sum())
     nao_notificados = total_nowcast - total_obs
@@ -162,6 +195,6 @@ def generate_report(
     if save_to:
         with open(save_to, "w", encoding="utf-8") as f:
             f.write(html)
-        print(f"[ok] Boletim salvo: {save_to}")
+        logger.info("Boletim salvo: %s", save_to)
 
     return html

@@ -122,7 +122,7 @@ class TestPlotNowcasting:
                                    synthetic_nowcast_high, tmp_path):
         """save_to parameter should write a file."""
         save_path = str(tmp_path / "test_plot.png")
-        fig = plot_nowcasting(
+        plot_nowcasting(
             synthetic_n_matrix,
             synthetic_nowcast_median,
             synthetic_nowcast_low,
@@ -207,7 +207,7 @@ class TestPlotPanel:
                                    tmp_path):
         """save_to parameter should write a file."""
         save_path = str(tmp_path / "test_panel.png")
-        fig = plot_panel(
+        plot_panel(
             synthetic_n_matrix,
             synthetic_nowcast_median,
             synthetic_nowcast_low,

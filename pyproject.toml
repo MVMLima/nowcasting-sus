@@ -4,12 +4,18 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nowcasting-sus"
-version = "1.0.0"
+version = "1.1.0"
 description = "Nowcasting bayesiano para dados do SINAN — correção de atraso de notificação em tempo real"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
     {name = "Marcos Malveira", email = "mvmlima@hotmail.com"}
+]
+keywords = [
+    "nowcasting", "nowcast", "bayesian", "pymc", "sinan",
+    "epidemiology", "surveillance", "health", "dengue", "chikungunya",
+    "arbovirus", "brazil", "sus", "data-science",
+    "time-series", "mcmc", "markov-chain-monte-carlo",
 ]
 requires-python = ">=3.10"
 dependencies = [
@@ -22,17 +28,44 @@ dependencies = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
+    "Intended Audience :: Healthcare Industry",
     "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: Mathematics",
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Natural Language :: Portuguese (Brazilian)",
+    "Operating System :: OS Independent",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.5.0",
+    "build>=1.0",
+    "twine>=4.0",
+]
+test = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
 ]
 
 [project.urls]
 Homepage = "https://github.com/MVMLima/nowcasting-sus"
 Documentation = "https://github.com/MVMLima/nowcasting-sus#readme"
+Repository = "https://github.com/MVMLima/nowcasting-sus"
+Changelog = "https://github.com/MVMLima/nowcasting-sus/blob/main/CHANGELOG.md"
+Issues = "https://github.com/MVMLima/nowcasting-sus/issues"
 
 [project.scripts]
 nowcasting-report = "nowcasting_sus.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["nowcasting_sus*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
