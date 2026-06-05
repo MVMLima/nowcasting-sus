@@ -1,9 +1,10 @@
 # nowcasting-sus
 
-[![CI](https://github.com/MVMLima/nowcasting-sus/actions/workflows/ci.yml/badge.svg)](https://github.com/MVMLima/nowcasting-sus/actions/workflows/ci.yml)
+[![CI](https://github.com/MVMLima/nowcasting-sus/actions/workflows/test.yml/badge.svg)](https://github.com/MVMLima/nowcasting-sus/actions/workflows/test.yml)
 [![PyPI version](https://img.shields.io/pypi/v/nowcasting-sus)](https://pypi.org/project/nowcasting-sus/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/nowcasting-sus)](https://pypi.org/project/nowcasting-sus/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Status](https://img.shields.io/pypi/status/nowcasting-sus)](https://pypi.org/project/nowcasting-sus/)
 
 **Nowcasting bayesiano para dados do SINAN** — correção de atraso de notificação em tempo real usando PyMC.
 
