@@ -8,7 +8,7 @@
 
 **Nowcasting bayesiano para dados do SINAN** — correção de atraso de notificação em tempo real usando PyMC.
 
-> ⚕️ Desenvolvido no Departamento de Vigilância em Saúde da Secretaria de Estado de Saúde do Acre
+> ⚕️ Desenvolvido no Centro de Inteligência Estratégica para a Gestão Estadual do SUS e Departamento de Vigilância em Saúde da Secretaria de Estado de Saúde do Acre
 > Agora open source para qualquer equipe de vigilância do Brasil.
 
 ---
