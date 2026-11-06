@@ -281,10 +281,20 @@ def plot_panel(
     ax2.grid(True, alpha=0.3)
 
     # (3) Distribuição de atraso
-    if delay_posterior.ndim > 1:
-        delay_mean = delay_posterior.mean(axis=0)
-    else:
+    # Aceita (amostras, D) e (D, amostras): depois de
+    # ``.stack(sample=("chain", "draw"))`` o ArviZ devolve os delays na
+    # primeira dimensão, o que estoura o broadcast do bar().
+    if delay_posterior.ndim == 1:
         delay_mean = delay_posterior
+    elif delay_posterior.shape[-1] == D:
+        delay_mean = delay_posterior.mean(axis=0)
+    elif delay_posterior.shape[0] == D:
+        delay_mean = delay_posterior.mean(axis=1)
+    else:
+        raise ValueError(
+            f"delay_posterior precisa de uma dimensão de tamanho D={D}, "
+            f"recebeu shape {delay_posterior.shape}"
+        )
     ax3.bar(range(D), delay_mean, color="#4CAF50", alpha=0.7)
     ax3.set_xlabel("Delay (dias)")
     ax3.set_ylabel("Probabilidade")

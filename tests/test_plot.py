@@ -328,3 +328,48 @@ class TestPlotDowEffect:
 
         assert os.path.exists(save_path)
         assert os.path.getsize(save_path) > 0
+
+
+class TestOrientacaoDelayPosterior:
+    """delay_posterior aceita (amostras, D) e (D, amostras)."""
+
+    def test_aceita_d_por_amostras(
+        self,
+        synthetic_n_matrix,
+        synthetic_dates,
+        synthetic_nowcast_median,
+        synthetic_nowcast_low,
+        synthetic_nowcast_high,
+        synthetic_delay_posterior,
+    ):
+        """Formato devolvido pelo .stack(sample=...) do ArviZ."""
+        d_por_amostras = synthetic_delay_posterior.T
+        fig = plot_panel(
+            synthetic_n_matrix,
+            synthetic_nowcast_median,
+            synthetic_nowcast_low,
+            synthetic_nowcast_high,
+            d_por_amostras,
+            synthetic_dates,
+        )
+        assert isinstance(fig, matplotlib.figure.Figure)
+
+    def test_shape_incompativel_levanta_erro(
+        self,
+        synthetic_n_matrix,
+        synthetic_dates,
+        synthetic_nowcast_median,
+        synthetic_nowcast_low,
+        synthetic_nowcast_high,
+    ):
+        """Dimensão que não é D não passa silenciosamente."""
+        errado = np.ones((100, 7))
+        with pytest.raises(ValueError, match="delay_posterior"):
+            plot_panel(
+                synthetic_n_matrix,
+                synthetic_nowcast_median,
+                synthetic_nowcast_low,
+                synthetic_nowcast_high,
+                errado,
+                synthetic_dates,
+            )

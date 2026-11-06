@@ -291,3 +291,52 @@ class TestRightTruncation:
         )
         assert len(counts) == 2
         assert (counts > 0).all()
+
+
+class TestFormatoSinan:
+    """Entrada real do SINAN: separador ';' e data dd/mm/aaaa."""
+
+    def test_separador_ponto_e_virgula(self):
+        """CSV com ';' é lido sem precisar passar sep."""
+        csv_content = (
+            "DT_SIN_PRI;DT_NOTIFIC;NU_ANO\n"
+            "01/02/2026;04/02/2026;2026\n"
+            "10/02/2026;12/02/2026;2026\n"
+        )
+        df = load_sinan(_write_csv(csv_content), max_delay=30)
+        assert len(df) == 2
+        assert list(df["delay"]) == [3, 2]
+
+    def test_separador_explicito(self):
+        """sep explícito continua mandando sobre a detecção."""
+        csv_content = "DT_SIN_PRI|DT_NOTIFIC\n01/02/2026|02/02/2026\n"
+        df = load_sinan(_write_csv(csv_content), max_delay=30, sep="|")
+        assert len(df) == 1
+
+    def test_data_ambiguas_como_dia_primeiro(self):
+        """05/04/2026 é 5 de abril, não 4 de maio."""
+        csv_content = (
+            "DT_SIN_PRI,DT_NOTIFIC\n"
+            "05/04/2026,08/04/2026\n"
+            "13/04/2026,15/04/2026\n"
+            "01/01/2026,02/01/2026\n"
+        )
+        df = load_sinan(_write_csv(csv_content), max_delay=30)
+        assert df["onset"].min() == pd.Timestamp("2026-01-01")
+        assert df["onset"].max() == pd.Timestamp("2026-04-13")
+        assert list(df.sort_values("onset")["delay"]) == [1, 3, 2]
+
+    def test_iso_continua_sendo_iso(self):
+        """Data ISO não deve ser reinterpretada como dia primeiro."""
+        csv_content = (
+            "DT_SIN_PRI,DT_NOTIFIC\n2026-04-05,2026-04-08\n2026-04-13,2026-04-15\n"
+        )
+        df = load_sinan(_write_csv(csv_content), max_delay=30)
+        assert df["onset"].max() == pd.Timestamp("2026-04-13")
+        assert df["onset"].min() == pd.Timestamp("2026-04-05")
+
+    def test_sep_tipo_invalido(self):
+        """sep precisa ser str."""
+        csv_content = "DT_SIN_PRI,DT_NOTIFIC\n2024-01-01,2024-01-02\n"
+        with pytest.raises(TypeError, match="sep"):
+            load_sinan(_write_csv(csv_content), sep=59)

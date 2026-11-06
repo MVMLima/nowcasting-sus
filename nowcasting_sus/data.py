@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 
 import numpy as np
 import pandas as pd
@@ -11,6 +12,42 @@ __all__ = ["load_sinan", "prepare_matrix"]
 
 logger = logging.getLogger("nowcasting_sus.data")
 
+_SEPARADORES = (";", ",", "\t", "|")
+_DATA_DDMM = re.compile(r"^\d{1,2}[/\-]\d{1,2}[/\-]\d{4}$")
+
+
+def _detectar_separador(filepath: str) -> str:
+    """Descobre o separador de campo pela linha de cabeçalho.
+
+    O export padrão do SINAN usa ``;``. Ler com o default vírgula devolve uma
+    única coluna e falha com ``ParserError``.
+    """
+    cabecalho = ""
+    for encoding in ("utf-8", "latin1"):
+        try:
+            with open(filepath, encoding=encoding) as fh:
+                cabecalho = fh.readline()
+            break
+        except UnicodeDecodeError:
+            continue
+
+    contagem = {sep: cabecalho.count(sep) for sep in _SEPARADORES}
+    melhor = max(contagem, key=lambda sep: contagem[sep])
+    return melhor if contagem[melhor] > 0 else ","
+
+
+def _converter_datas(serie: pd.Series) -> pd.Series:
+    """Converte uma coluna de datas preservando ``dd/mm/aaaa``.
+
+    Com ``dayfirst=False`` o parser aceita ``05/04/2026`` como 4 de maio e só
+    falha quando o dia passa de 12 — o resultado sai errado em silêncio. Por
+    isso o padrão ``dd/mm/aaaa`` é detectado e lido com ``dayfirst=True``.
+    """
+    texto = serie.dropna().astype(str).str.strip()
+    if len(texto) and texto.str.match(_DATA_DDMM).mean() >= 0.95:
+        return pd.to_datetime(serie, dayfirst=True, errors="coerce")
+    return pd.to_datetime(serie, errors="coerce")
+
 
 def _validate_types(
     filepath: str,
@@ -18,6 +55,7 @@ def _validate_types(
     date_notif: str,
     max_delay: int,
     min_year: int | None,
+    sep: str | None,
 ) -> None:
     """Valida tipos e ranges dos parâmetros de ``load_sinan``.
 
@@ -40,6 +78,11 @@ def _validate_types(
         raise TypeError(
             f"date_notif deve ser str, recebeu {type(date_notif).__name__}: {date_notif!r}"
         )
+    if sep is not None and not isinstance(sep, str):
+        raise TypeError(
+            f"sep deve ser str | None, recebeu {type(sep).__name__}: {sep!r}"
+        )
+
     if not isinstance(max_delay, (int, np.integer)):
         raise TypeError(
             f"max_delay deve ser int, recebeu {type(max_delay).__name__}: {max_delay!r}"
@@ -63,6 +106,7 @@ def load_sinan(
     date_notif: str = "DT_NOTIFIC",
     max_delay: int = 30,
     min_year: int | None = None,
+    sep: str | None = None,
 ) -> pd.DataFrame:
     """Carrega e valida dados SINAN para nowcasting.
 
@@ -79,6 +123,10 @@ def load_sinan(
     min_year : int, optional
         Ano mínimo para filtrar (útil para remover registros antigos).
         Deve estar entre 1900 e 2100.
+    sep : str, optional
+        Separador de campo. Se omitido, é detectado pelo cabeçalho — o export
+        padrão do SINAN usa ``;``, não vírgula.
+
 
     Returns
     -------
@@ -95,17 +143,20 @@ def load_sinan(
     TypeError
         Se tipos dos parâmetros estiverem incorretos.
     """
-    _validate_types(filepath, date_onset, date_notif, max_delay, min_year)
+    _validate_types(filepath, date_onset, date_notif, max_delay, min_year, sep)
 
     logger.info("Carregando dados: %s", filepath)
 
+    sep = sep or _detectar_separador(filepath)
+    logger.info("Separador de campo: %r", sep)
+
     try:
-        df = pd.read_csv(filepath, low_memory=False, encoding="utf-8")
+        df = pd.read_csv(filepath, sep=sep, low_memory=False, encoding="utf-8")
     except FileNotFoundError:
         raise
     except UnicodeDecodeError:
         logger.warning("UTF-8 falhou, tentando encoding latin1...")
-        df = pd.read_csv(filepath, low_memory=False, encoding="latin1")
+        df = pd.read_csv(filepath, sep=sep, low_memory=False, encoding="latin1")
     except Exception as exc:
         raise ValueError(f"Não foi possível ler o arquivo {filepath!r}: {exc}") from exc
 
@@ -120,16 +171,9 @@ def load_sinan(
     df = df[[date_onset, date_notif]].copy()
     df.columns = ["onset", "notif"]
 
-    # Converter datas — tenta formato automático
+    # Converter datas — dd/mm/aaaa é lido com dayfirst, ISO fica no default
     for col in ["onset", "notif"]:
-        df[col] = pd.to_datetime(df[col], dayfirst=False, errors="coerce")
-
-    # Se dayfirst=False falhou, tenta dayfirst=True
-    first_col = "onset"
-    if df[first_col].isna().sum() > len(df) * 0.5:
-        logger.info("dayfirst=False produziu muitos NaT, tentando dayfirst=True...")
-        for col in ["onset", "notif"]:
-            df[col] = pd.to_datetime(df[col], dayfirst=True, errors="coerce")
+        df[col] = _converter_datas(df[col])
 
     # Verificar se há datas mínimas plausíveis
     valid_dates = df["onset"].dropna()
