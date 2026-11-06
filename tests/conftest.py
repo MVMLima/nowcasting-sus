@@ -77,7 +77,6 @@ def synthetic_dow_effect() -> dict:
 def synthetic_obs_t() -> np.ndarray:
     """Observation time indices (non-zero cells in matrix)."""
     # Simplified: just a subset of time indices
-    rng = np.random.default_rng(789)
     t_vals = np.repeat(np.arange(30), 3)  # 3 obs per day
     return t_vals[:80]  # 80 observations
 

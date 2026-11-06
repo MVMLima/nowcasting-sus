@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 import arviz as az
 import numpy as np
 import pymc as pm
-
 
 __all__ = ["NowcastingModel", "NowcastingModelDOW"]
 
@@ -67,9 +66,9 @@ class NowcastingModel:
         self.sigma_rw = sigma_rw
         self.alpha_nb = alpha_nb
         self.alpha_scale = alpha_scale
-        self.model_: Optional[pm.Model] = None
+        self.model_: pm.Model | None = None
         self.idata_: Any = None
-        self._trace: Optional[Dict[str, np.ndarray]] = None
+        self._trace: dict[str, np.ndarray] | None = None
 
     def build(
         self,
@@ -174,7 +173,9 @@ class NowcastingModel:
         """
         logger.info(
             "Ajustando modelo (%d cadeias, %d draws, %d tune)...",
-            chains, draws, tune,
+            chains,
+            draws,
+            tune,
         )
         self.build(obs_t, obs_d, counts, T, D)
 
@@ -188,9 +189,7 @@ class NowcastingModel:
             )
 
         n_total = chains * draws
-        logger.info(
-            "Modelo ajustado: %d amostras por parâmetro", n_total
-        )
+        logger.info("Modelo ajustado: %d amostras por parâmetro", n_total)
         return self.idata_
 
     def get_nowcast(self) -> np.ndarray:
@@ -207,9 +206,7 @@ class NowcastingModel:
             Se o modelo não foi ajustado via :meth:`fit`.
         """
         if self.idata_ is None:
-            raise RuntimeError(
-                "Modelo não ajustado. Execute fit() primeiro."
-            )
+            raise RuntimeError("Modelo não ajustado. Execute fit() primeiro.")
         return self.idata_.posterior["f_t"].mean(dim=["chain", "draw"]).values
 
     def get_nowcast_ci(self, prob: float = 0.95) -> tuple:
@@ -232,9 +229,7 @@ class NowcastingModel:
             Se o modelo não foi ajustado.
         """
         if self.idata_ is None:
-            raise RuntimeError(
-                "Modelo não ajustado. Execute fit() primeiro."
-            )
+            raise RuntimeError("Modelo não ajustado. Execute fit() primeiro.")
         f_samples = self.idata_.posterior["f_t"].values
         lambda_samples = np.exp(f_samples)
         low = np.percentile(lambda_samples, (1 - prob) / 2 * 100, axis=(0, 1))
@@ -242,7 +237,7 @@ class NowcastingModel:
         median = np.percentile(lambda_samples, 50, axis=(0, 1))
         return median, low, high
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Retorna sumário estatístico e diagnósticos do modelo ajustado.
 
         Inclui:
@@ -265,9 +260,7 @@ class NowcastingModel:
             Se o modelo não foi ajustado.
         """
         if self.idata_ is None:
-            raise RuntimeError(
-                "Modelo não ajustado. Execute fit() primeiro."
-            )
+            raise RuntimeError("Modelo não ajustado. Execute fit() primeiro.")
 
         summary = {}
 
@@ -277,9 +270,7 @@ class NowcastingModel:
             summary["r_hat"] = {
                 "max": float(az_summary["r_hat"].max()),
                 "mean": float(az_summary["r_hat"].mean()),
-                "param_acima_1_01": int(
-                    (az_summary["r_hat"] > 1.01).sum()
-                ),
+                "param_acima_1_01": int((az_summary["r_hat"] > 1.01).sum()),
             }
             summary["n_eff"] = {
                 "min": int(az_summary["ess_bulk"].min()),
@@ -326,9 +317,7 @@ class NowcastingModel:
             summary["n_parameters"] = len(
                 [v for v in self.model_.free_RVs if v.name != "obs"]
             )
-            summary["n_observations"] = int(
-                self.idata_.constant_data["obs"].shape[0]
-            )
+            summary["n_observations"] = int(self.idata_.constant_data["obs"].shape[0])
         except Exception:
             summary["n_parameters"] = None
             summary["n_observations"] = None
@@ -409,9 +398,7 @@ class NowcastingModelDOW(NowcastingModel):
             )
 
             # Efeito dia da semana (soma zero)
-            beta_dow = pm.ZeroSumNormal(
-                "beta_dow", sigma=self.sigma_dow, dims="dow"
-            )
+            beta_dow = pm.ZeroSumNormal("beta_dow", sigma=self.sigma_dow, dims="dow")
 
             # Taxa com ajuste DOW
             log_lambda = f_t + beta_dow[dow]
@@ -472,7 +459,9 @@ class NowcastingModelDOW(NowcastingModel):
         """
         logger.info(
             "Ajustando modelo DOW (%d cadeias, %d draws, %d tune)...",
-            chains, draws, tune,
+            chains,
+            draws,
+            tune,
         )
         self.dow = dow
         self.build(obs_t, obs_d, counts, T, D, dow=dow)
@@ -504,9 +493,7 @@ class NowcastingModelDOW(NowcastingModel):
             Se o modelo não foi ajustado.
         """
         if self.idata_ is None:
-            raise RuntimeError(
-                "Modelo não ajustado. Execute fit() primeiro."
-            )
+            raise RuntimeError("Modelo não ajustado. Execute fit() primeiro.")
         beta = self.idata_.posterior["beta_dow"].mean(dim=["chain", "draw"]).values
         dias = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
-        return {d: float(np.exp(b)) for d, b in zip(dias, beta)}
+        return {d: float(np.exp(b)) for d, b in zip(dias, beta, strict=True)}

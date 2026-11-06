@@ -14,12 +14,10 @@ Tudo é salvo em ``./output_nowcasting/``.
 
 from __future__ import annotations
 
-import logging
 import os
 import sys
 from datetime import datetime, timedelta
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -28,7 +26,7 @@ import pandas as pd
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from nowcasting_sus import setup_logging
-from nowcasting_sus.data import load_sinan, prepare_matrix
+from nowcasting_sus.data import prepare_matrix
 from nowcasting_sus.models import NowcastingModel, NowcastingModelDOW
 from nowcasting_sus.plot import plot_nowcasting, plot_panel
 from nowcasting_sus.report import generate_report
@@ -64,11 +62,13 @@ def gerar_dados_sinteticos(
     start_date = datetime(2024, 1, 1)
 
     # Tendência de casos: começa baixo, sobe, estabiliza
-    trend = np.concatenate([
-        np.linspace(5, 25, n_dias // 3),
-        np.linspace(25, 30, n_dias // 3),
-        np.full(n_dias - 2 * (n_dias // 3), 30),
-    ])
+    trend = np.concatenate(
+        [
+            np.linspace(5, 25, n_dias // 3),
+            np.linspace(25, 30, n_dias // 3),
+            np.full(n_dias - 2 * (n_dias // 3), 30),
+        ]
+    )
     trend += rng.normal(0, 3, size=n_dias)  # ruído
 
     # Efeito dia da semana (fim de semana reduz)
@@ -93,8 +93,10 @@ def gerar_dados_sinteticos(
     df = df.sample(frac=1, random_state=rng).reset_index(drop=True)
 
     n_total = len(df)
-    print(f"Dados sintéticos gerados: {n_total} registros "
-          f"({df['onset'].min().date()} a {df['onset'].max().date()})")
+    print(
+        f"Dados sintéticos gerados: {n_total} registros "
+        f"({df['onset'].min().date()} a {df['onset'].max().date()})"
+    )
     return df
 
 
@@ -131,8 +133,16 @@ def main():
         print("\n[3/5] Ajustando modelo DOW...")
         modelo = NowcastingModelDOW()
         idata = modelo.fit(
-            obs_t, obs_d, counts, T=T, D=D, dow=dow,
-            draws=1000, tune=1000, chains=4, random_seed=42,
+            obs_t,
+            obs_d,
+            counts,
+            T=T,
+            D=D,
+            dow=dow,
+            draws=1000,
+            tune=1000,
+            chains=4,
+            random_seed=42,
         )
         print("\nEfeito dia da semana:")
         for dia, fator in modelo.get_dow_effect().items():
@@ -142,8 +152,15 @@ def main():
         print("\n[3/5] Ajustando modelo base...")
         modelo = NowcastingModel()
         idata = modelo.fit(
-            obs_t, obs_d, counts, T=T, D=D,
-            draws=1000, tune=1000, chains=4, random_seed=42,
+            obs_t,
+            obs_d,
+            counts,
+            T=T,
+            D=D,
+            draws=1000,
+            tune=1000,
+            chains=4,
+            random_seed=42,
         )
 
     # Estatísticas
@@ -154,7 +171,9 @@ def main():
             print(f"  R_hat máximo: {summary['r_hat']['max']:.4f}")
             print(f"  R_hat médio:  {summary['r_hat']['mean']:.4f}")
         if summary.get("waic"):
-            print(f"  WAIC: {summary['waic']['waic']:.1f} ± {summary['waic']['se']:.1f}")
+            print(
+                f"  WAIC: {summary['waic']['waic']:.1f} ± {summary['waic']['se']:.1f}"
+            )
         if summary.get("loo"):
             print(f"  LOO:  {summary['loo']['loo']:.1f} ± {summary['loo']['se']:.1f}")
         if summary.get("n_divergences") is not None:
@@ -173,10 +192,15 @@ def main():
     # Gráfico principal
     grafico_path = os.path.join(OUTPUT_DIR, "nowcasting_curva.png")
     fig = plot_nowcasting(
-        nmat, median, low, high, dates,
+        nmat,
+        median,
+        low,
+        high,
+        dates,
         title=f"Nowcasting — Dados Sintéticos ({T} dias)",
         save_to=grafico_path,
-        dpi=150, tema="default",
+        dpi=150,
+        tema="default",
     )
     print(f"  [ok] Gráfico: {grafico_path}")
     plt.close(fig)
@@ -185,10 +209,16 @@ def main():
     dow_eff = modelo.get_dow_effect() if usar_dow else None
     painel_path = os.path.join(OUTPUT_DIR, "nowcasting_painel.png")
     fig = plot_panel(
-        nmat, median, low, high, delay_p, dates,
+        nmat,
+        median,
+        low,
+        high,
+        delay_p,
+        dates,
         dow_effect=dow_eff,
         save_to=painel_path,
-        dpi=150, tema="default",
+        dpi=150,
+        tema="default",
     )
     print(f"  [ok] Painel: {painel_path}")
     plt.close(fig)
@@ -196,10 +226,15 @@ def main():
     # Gráfico com tema dark
     grafico_dark_path = os.path.join(OUTPUT_DIR, "nowcasting_dark.png")
     fig = plot_nowcasting(
-        nmat, median, low, high, dates,
-        title=f"Nowcasting (Tema Dark) — Dados Sintéticos",
+        nmat,
+        median,
+        low,
+        high,
+        dates,
+        title="Nowcasting (Tema Dark) — Dados Sintéticos",
         save_to=grafico_dark_path,
-        dpi=150, tema="dark",
+        dpi=150,
+        tema="dark",
     )
     print(f"  [ok] Gráfico (dark): {grafico_dark_path}")
     plt.close(fig)
@@ -207,9 +242,15 @@ def main():
     # Gráfico SVG
     grafico_svg_path = os.path.join(OUTPUT_DIR, "nowcasting_curva.svg")
     fig = plot_nowcasting(
-        nmat, median, low, high, dates,
+        nmat,
+        median,
+        low,
+        high,
+        dates,
         save_to=grafico_svg_path,
-        dpi=150, tema="ggplot", formato="svg",
+        dpi=150,
+        tema="ggplot",
+        formato="svg",
     )
     print(f"  [ok] Gráfico SVG: {grafico_svg_path}")
     plt.close(fig)
@@ -217,7 +258,11 @@ def main():
     # Relatório HTML
     html_path = os.path.join(OUTPUT_DIR, "boletim_nowcasting.html")
     generate_report(
-        nmat, median, low, high, dates,
+        nmat,
+        median,
+        low,
+        high,
+        dates,
         agravo="Dengue (sintético)",
         uf="Acre (demonstração)",
         cid="A90",

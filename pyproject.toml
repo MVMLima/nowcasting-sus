@@ -45,7 +45,7 @@ classifiers = [
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
-    "ruff>=0.5.0",
+    "ruff>=0.17.4,<0.18",
     "build>=1.0",
     "twine>=4.0",
 ]
@@ -77,4 +77,21 @@ filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::FutureWarning",
     "ignore::UserWarning",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+# `dados/` é diretório de trabalho local (snapshot baixado, diagnóstico solto)
+extend-exclude = ["dados"]
+
+[tool.ruff.lint]
+# Conjunto explícito: sem isso o resultado depende do default da versão do ruff
+# instalada no CI, que muda entre releases.
+select = ["E", "F", "W", "I", "UP", "B", "RUF", "SIM", "G"]
+ignore = [
+    "RUF001",  # ambiguidade unicode: texto em pt-BR usa ×, ², aspas tipográficas
+    "RUF002",
+    "RUF003",
+    "E501",  # comprimento: quem decide é o `ruff format`; string longa não é quebrável
 ]

@@ -1,5 +1,10 @@
 """Exemplo completo: nowcasting com dados reais do SINAN."""
+
 import sys
+
+import numpy as np
+import pandas as pd
+
 sys.path.insert(0, "..")
 
 from nowcasting_sus.data import load_sinan, prepare_matrix
@@ -21,13 +26,26 @@ median, low, high = modelo.get_nowcast_ci()
 delay_p = idata.posterior["delay_p"].mean(dim=["chain", "draw"]).values
 
 # 3. Gráfico
-fig = plot_panel(nmat, np.exp(median), np.exp(low), np.exp(high),
-                 delay_p, dates, save_to="nowcasting_resultados.png")
+fig = plot_panel(
+    nmat,
+    np.exp(median),
+    np.exp(low),
+    np.exp(high),
+    delay_p,
+    dates,
+    save_to="nowcasting_resultados.png",
+)
 print("[ok] Gráfico: nowcasting_resultados.png")
 
 # 4. Relatório HTML
-generate_report(nmat, np.exp(median), np.exp(low), np.exp(high),
-                dates, save_to="boletim_nowcasting.html")
+generate_report(
+    nmat,
+    np.exp(median),
+    np.exp(low),
+    np.exp(high),
+    dates,
+    save_to="boletim_nowcasting.html",
+)
 
 # 5. Modelo com DOW (opcional)
 T = nmat.shape[0]

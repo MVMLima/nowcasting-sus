@@ -12,9 +12,14 @@ from nowcasting_sus.report import generate_report
 class TestGenerateReport:
     """Tests for generate_report()."""
 
-    def test_returns_html_string(self, synthetic_n_matrix, synthetic_dates,
-                                  synthetic_nowcast_median, synthetic_nowcast_low,
-                                  synthetic_nowcast_high):
+    def test_returns_html_string(
+        self,
+        synthetic_n_matrix,
+        synthetic_dates,
+        synthetic_nowcast_median,
+        synthetic_nowcast_low,
+        synthetic_nowcast_high,
+    ):
         """Should return a non-empty HTML string."""
         html = generate_report(
             synthetic_n_matrix,
@@ -26,9 +31,14 @@ class TestGenerateReport:
         assert isinstance(html, str)
         assert len(html) > 500
 
-    def test_contains_doctype(self, synthetic_n_matrix, synthetic_dates,
-                               synthetic_nowcast_median, synthetic_nowcast_low,
-                               synthetic_nowcast_high):
+    def test_contains_doctype(
+        self,
+        synthetic_n_matrix,
+        synthetic_dates,
+        synthetic_nowcast_median,
+        synthetic_nowcast_low,
+        synthetic_nowcast_high,
+    ):
         """HTML should start with DOCTYPE declaration."""
         html = generate_report(
             synthetic_n_matrix,
@@ -39,9 +49,14 @@ class TestGenerateReport:
         )
         assert html.startswith("<!DOCTYPE html>")
 
-    def test_contains_title(self, synthetic_n_matrix, synthetic_dates,
-                             synthetic_nowcast_median, synthetic_nowcast_low,
-                             synthetic_nowcast_high):
+    def test_contains_title(
+        self,
+        synthetic_n_matrix,
+        synthetic_dates,
+        synthetic_nowcast_median,
+        synthetic_nowcast_low,
+        synthetic_nowcast_high,
+    ):
         """HTML should contain expected title."""
         html = generate_report(
             synthetic_n_matrix,
@@ -56,9 +71,14 @@ class TestGenerateReport:
         assert "Chikungunya" in html
         assert "Bahia" in html
 
-    def test_contains_custom_agravo_uf(self, synthetic_n_matrix, synthetic_dates,
-                                        synthetic_nowcast_median, synthetic_nowcast_low,
-                                        synthetic_nowcast_high):
+    def test_contains_custom_agravo_uf(
+        self,
+        synthetic_n_matrix,
+        synthetic_dates,
+        synthetic_nowcast_median,
+        synthetic_nowcast_low,
+        synthetic_nowcast_high,
+    ):
         """Custom agravo and UF should appear in the HTML."""
         html = generate_report(
             synthetic_n_matrix,
@@ -74,9 +94,14 @@ class TestGenerateReport:
         assert "São Paulo" in html
         assert "A90" in html
 
-    def test_contains_resumo_section(self, synthetic_n_matrix, synthetic_dates,
-                                      synthetic_nowcast_median, synthetic_nowcast_low,
-                                      synthetic_nowcast_high):
+    def test_contains_resumo_section(
+        self,
+        synthetic_n_matrix,
+        synthetic_dates,
+        synthetic_nowcast_median,
+        synthetic_nowcast_low,
+        synthetic_nowcast_high,
+    ):
         """HTML should have a 'Resumo Executivo' section."""
         html = generate_report(
             synthetic_n_matrix,
@@ -87,9 +112,14 @@ class TestGenerateReport:
         )
         assert "Resumo Executivo" in html
 
-    def test_contains_table(self, synthetic_n_matrix, synthetic_dates,
-                             synthetic_nowcast_median, synthetic_nowcast_low,
-                             synthetic_nowcast_high):
+    def test_contains_table(
+        self,
+        synthetic_n_matrix,
+        synthetic_dates,
+        synthetic_nowcast_median,
+        synthetic_nowcast_low,
+        synthetic_nowcast_high,
+    ):
         """HTML should contain a table with headers."""
         html = generate_report(
             synthetic_n_matrix,
@@ -103,9 +133,14 @@ class TestGenerateReport:
         assert "<th>Nowcast</th>" in html
         assert "<th>IC 95%</th>" in html
 
-    def test_table_has_14_rows(self, synthetic_n_matrix, synthetic_dates,
-                                synthetic_nowcast_median, synthetic_nowcast_low,
-                                synthetic_nowcast_high):
+    def test_table_has_14_rows(
+        self,
+        synthetic_n_matrix,
+        synthetic_dates,
+        synthetic_nowcast_median,
+        synthetic_nowcast_low,
+        synthetic_nowcast_high,
+    ):
         """Table should have up to 14 data rows (last 14 days)."""
         html = generate_report(
             synthetic_n_matrix,
@@ -121,9 +156,14 @@ class TestGenerateReport:
         assert tr_count <= 15
         assert tr_count >= 2  # at least header + 1 data row
 
-    def test_contains_numbers(self, synthetic_n_matrix, synthetic_dates,
-                               synthetic_nowcast_median, synthetic_nowcast_low,
-                               synthetic_nowcast_high):
+    def test_contains_numbers(
+        self,
+        synthetic_n_matrix,
+        synthetic_dates,
+        synthetic_nowcast_median,
+        synthetic_nowcast_low,
+        synthetic_nowcast_high,
+    ):
         """HTML should contain numeric summary values."""
         html = generate_report(
             synthetic_n_matrix,
@@ -136,9 +176,14 @@ class TestGenerateReport:
         # Should have some numbers in the page
         assert any(c.isdigit() for c in html)
 
-    def test_contains_nota_tecnica(self, synthetic_n_matrix, synthetic_dates,
-                                    synthetic_nowcast_median, synthetic_nowcast_low,
-                                    synthetic_nowcast_high):
+    def test_contains_nota_tecnica(
+        self,
+        synthetic_n_matrix,
+        synthetic_dates,
+        synthetic_nowcast_median,
+        synthetic_nowcast_low,
+        synthetic_nowcast_high,
+    ):
         """HTML should contain technical note."""
         html = generate_report(
             synthetic_n_matrix,
@@ -149,9 +194,14 @@ class TestGenerateReport:
         )
         assert "Nota Técnica" in html
 
-    def test_contains_footer(self, synthetic_n_matrix, synthetic_dates,
-                              synthetic_nowcast_median, synthetic_nowcast_low,
-                              synthetic_nowcast_high):
+    def test_contains_footer(
+        self,
+        synthetic_n_matrix,
+        synthetic_dates,
+        synthetic_nowcast_median,
+        synthetic_nowcast_low,
+        synthetic_nowcast_high,
+    ):
         """HTML should contain footer with version."""
         html = generate_report(
             synthetic_n_matrix,
@@ -163,9 +213,15 @@ class TestGenerateReport:
         assert "nowcasting-sus" in html
         assert "</footer>" in html
 
-    def test_save_to_creates_file(self, synthetic_n_matrix, synthetic_dates,
-                                   synthetic_nowcast_median, synthetic_nowcast_low,
-                                   synthetic_nowcast_high, tmp_path):
+    def test_save_to_creates_file(
+        self,
+        synthetic_n_matrix,
+        synthetic_dates,
+        synthetic_nowcast_median,
+        synthetic_nowcast_low,
+        synthetic_nowcast_high,
+        tmp_path,
+    ):
         """save_to parameter should write an HTML file."""
         save_path = str(tmp_path / "test_report.html")
         html = generate_report(
@@ -179,13 +235,18 @@ class TestGenerateReport:
         assert os.path.exists(save_path)
         assert os.path.getsize(save_path) > 0
         # File content should match returned HTML
-        with open(save_path, "r") as f:
+        with open(save_path) as f:
             content = f.read()
         assert content == html
 
-    def test_total_observado_custom(self, synthetic_n_matrix, synthetic_dates,
-                                     synthetic_nowcast_median, synthetic_nowcast_low,
-                                     synthetic_nowcast_high):
+    def test_total_observado_custom(
+        self,
+        synthetic_n_matrix,
+        synthetic_dates,
+        synthetic_nowcast_median,
+        synthetic_nowcast_low,
+        synthetic_nowcast_high,
+    ):
         """Custom total_observado should be reflected in the HTML."""
         html = generate_report(
             synthetic_n_matrix,

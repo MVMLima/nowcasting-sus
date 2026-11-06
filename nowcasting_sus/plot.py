@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-__all__ = ["plot_nowcasting", "plot_panel", "plot_dow_effect"]
+__all__ = ["plot_dow_effect", "plot_nowcasting", "plot_panel"]
 
 logger = logging.getLogger("nowcasting_sus.plot")
 
@@ -83,8 +81,7 @@ def _aplicar_tema(tema: str) -> None:
             plt.rcParams.update(TEMAS_DISPONIVEIS["default"])
     else:
         logger.warning(
-            "Tema %r não reconhecido. Usando 'default'. "
-            "Temas disponíveis: %s",
+            "Tema %r não reconhecido. Usando 'default'. Temas disponíveis: %s",
             tema,
             ", ".join(list(TEMAS_DISPONIVEIS.keys()) + ESTILOS_MATPLOTLIB),
         )
@@ -109,7 +106,8 @@ def _resolver_formato(path: str | None, formato: str) -> str:
     if formato not in FORMATOS_VALIDOS:
         logger.warning(
             "Formato %r inválido. Usando 'png'. Válidos: %s",
-            formato, ", ".join(FORMATOS_VALIDOS),
+            formato,
+            ", ".join(FORMATOS_VALIDOS),
         )
         return "png"
     return formato
@@ -126,7 +124,7 @@ def plot_nowcasting(
     nowcast_color: str = "#FF5722",
     ci_color: str = "#FFCCBC",
     figsize=(12, 5),
-    save_to: Optional[str] = None,
+    save_to: str | None = None,
     dpi: int = 150,
     tema: str = "default",
     formato: str = "png",
@@ -172,8 +170,12 @@ def plot_nowcasting(
     fig, ax = plt.subplots(figsize=figsize)
 
     ax.fill_between(
-        dates, nowcast_low, nowcast_high,
-        color=ci_color, alpha=0.5, label="IC 95% nowcast",
+        dates,
+        nowcast_low,
+        nowcast_high,
+        color=ci_color,
+        alpha=0.5,
+        label="IC 95% nowcast",
     )
     ax.plot(dates, nowcast_median, color=nowcast_color, lw=2, label="Nowcast (mediana)")
     ax.plot(dates, observed, color=observed_color, lw=1.5, alpha=0.7, label="Observado")
@@ -201,9 +203,9 @@ def plot_panel(
     nowcast_high: np.ndarray,
     delay_posterior: np.ndarray,
     dates,
-    dow_effect: Optional[dict] = None,
+    dow_effect: dict | None = None,
     zoom_days: int = 21,
-    save_to: Optional[str] = None,
+    save_to: str | None = None,
     dpi: int = 150,
     tema: str = "default",
     formato: str = "png",
@@ -266,8 +268,11 @@ def plot_panel(
     # (2) Zoom últimos N dias
     zoom = min(zoom_days, T)
     ax2.fill_between(
-        dates[-zoom:], nowcast_low[-zoom:], nowcast_high[-zoom:],
-        color="#FFCCBC", alpha=0.5,
+        dates[-zoom:],
+        nowcast_low[-zoom:],
+        nowcast_high[-zoom:],
+        color="#FFCCBC",
+        alpha=0.5,
     )
     ax2.plot(dates[-zoom:], nowcast_median[-zoom:], color="#FF5722", lw=2)
     ax2.plot(dates[-zoom:], observed[-zoom:], color="#2196F3", lw=1.5, alpha=0.7)
@@ -290,7 +295,10 @@ def plot_panel(
     log_matrix = np.log1p(n_matrix)
     target_ax = ax4 or axes[1, 1]
     im = target_ax.imshow(
-        log_matrix.T, aspect="auto", cmap="YlOrRd", interpolation="nearest",
+        log_matrix.T,
+        aspect="auto",
+        cmap="YlOrRd",
+        interpolation="nearest",
     )
     target_ax.set_xlabel("Dia de onset")
     target_ax.set_ylabel("Delay (dias)")
@@ -318,7 +326,7 @@ def plot_panel(
 
 def plot_dow_effect(
     dow_effect: dict,
-    save_to: Optional[str] = None,
+    save_to: str | None = None,
     dpi: int = 150,
     tema: str = "default",
     formato: str = "png",
@@ -355,12 +363,13 @@ def plot_dow_effect(
     ax.set_ylabel("Fator multiplicativo (exp(β))")
     ax.grid(True, alpha=0.3)
 
-    for bar, val in zip(bars, vals):
+    for bar, val in zip(bars, vals, strict=True):
         ax.text(
             bar.get_x() + bar.get_width() / 2,
             bar.get_height() + 0.02,
             f"{val:.2f}",
-            ha="center", fontsize=9,
+            ha="center",
+            fontsize=9,
         )
 
     plt.tight_layout()

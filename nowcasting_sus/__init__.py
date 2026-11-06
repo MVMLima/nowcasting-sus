@@ -15,20 +15,19 @@ from __future__ import annotations
 import logging
 import os
 import sys
-
 from importlib.metadata import version as _version
 
 __all__ = [
-    "load_sinan",
-    "prepare_matrix",
     "NowcastingModel",
     "NowcastingModelDOW",
+    "__version__",
+    "generate_report",
+    "load_sinan",
+    "plot_dow_effect",
     "plot_nowcasting",
     "plot_panel",
-    "plot_dow_effect",
-    "generate_report",
+    "prepare_matrix",
     "setup_logging",
-    "__version__",
 ]
 
 try:
@@ -86,5 +85,5 @@ _logger = setup_logging()
 
 from nowcasting_sus.data import load_sinan, prepare_matrix  # noqa: E402
 from nowcasting_sus.models import NowcastingModel, NowcastingModelDOW  # noqa: E402
-from nowcasting_sus.plot import plot_nowcasting, plot_panel, plot_dow_effect  # noqa: E402
+from nowcasting_sus.plot import plot_dow_effect, plot_nowcasting, plot_panel  # noqa: E402
 from nowcasting_sus.report import generate_report  # noqa: E402

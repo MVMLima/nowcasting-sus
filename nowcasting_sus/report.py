@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -24,8 +23,8 @@ def generate_report(
     agravo: str = "Chikungunya",
     uf: str = "Bahia",
     cid: str = "A92.0",
-    total_observado: Optional[int] = None,
-    save_to: Optional[str] = None,
+    total_observado: int | None = None,
+    save_to: str | None = None,
 ) -> str:
     """Gera boletim epidemiológico em HTML.
 
@@ -76,8 +75,7 @@ def generate_report(
         )
     if len(observed) != n_dates:
         raise ValueError(
-            f"n_matrix tem {n_matrix.shape[0]} linhas, "
-            f"mas dates tem {n_dates}"
+            f"n_matrix tem {n_matrix.shape[0]} linhas, mas dates tem {n_dates}"
         )
 
     total_obs = total_observado or int(observed.sum())
@@ -87,22 +85,24 @@ def generate_report(
 
     # Últimos 14 dias
     n_last = min(14, len(nowcast_median))
-    ultimos_14 = pd.DataFrame({
-        "Data": pd.to_datetime(dates[-n_last:]).strftime("%d/%m/%Y"),
-        "Observado": observed[-n_last:].astype(int),
-        "Nowcast": nowcast_median[-n_last:].round(1),
-        "IC_inf": nowcast_low[-n_last:].round(1),
-        "IC_sup": nowcast_high[-n_last:].round(1),
-    })
+    ultimos_14 = pd.DataFrame(
+        {
+            "Data": pd.to_datetime(dates[-n_last:]).strftime("%d/%m/%Y"),
+            "Observado": observed[-n_last:].astype(int),
+            "Nowcast": nowcast_median[-n_last:].round(1),
+            "IC_inf": nowcast_low[-n_last:].round(1),
+            "IC_sup": nowcast_high[-n_last:].round(1),
+        }
+    )
 
     rows = ""
     for _, r in ultimos_14.iterrows():
         rows += f"""
         <tr>
-            <td>{r['Data']}</td>
-            <td>{int(r['Observado'])}</td>
-            <td>{r['Nowcast']}</td>
-            <td>({r['IC_inf']} - {r['IC_sup']})</td>
+            <td>{r["Data"]}</td>
+            <td>{int(r["Observado"])}</td>
+            <td>{r["Nowcast"]}</td>
+            <td>({r["IC_inf"]} - {r["IC_sup"]})</td>
         </tr>"""
 
     html = f"""<!DOCTYPE html>
@@ -143,7 +143,7 @@ def generate_report(
 <body>
 <h1>Boletim Nowcasting</h1>
 <p><strong>{agravo}</strong> (CID-10: {cid}) — {uf}</p>
-<p>Dados: SINAN | Atualizado em: {pd.Timestamp.now().strftime('%d/%m/%Y %H:%M')}</p>
+<p>Dados: SINAN | Atualizado em: {pd.Timestamp.now().strftime("%d/%m/%Y %H:%M")}</p>
 
 <div class="resumo">
     <h2>Resumo Executivo</h2>
@@ -173,7 +173,7 @@ def generate_report(
 </p>
 <p>
     Com base na estimativa atual, estima-se que <strong>{nao_notificados:,} casos</strong>
-    ({nao_notificados/total_nowcast*100:.1f}% do total)
+    ({nao_notificados / total_nowcast * 100:.1f}% do total)
     ainda não foram registrados no SINAN e devem ser notificados nos próximos dias.
 </p>
 

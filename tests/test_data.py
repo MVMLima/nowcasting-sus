@@ -11,7 +11,6 @@ import pytest
 
 from nowcasting_sus.data import load_sinan, prepare_matrix
 
-
 # ── Helpers ──────────────────────────────────────────────────────────────
 
 
@@ -52,9 +51,7 @@ class TestLoadSinan:
     def test_custom_column_names(self):
         """Use custom column names for onset/notif."""
         csv_content = (
-            "DATA_INICIO,DATA_NOTIF\n"
-            "2024-01-01,2024-01-02\n"
-            "2024-01-10,2024-01-12\n"
+            "DATA_INICIO,DATA_NOTIF\n2024-01-01,2024-01-02\n2024-01-10,2024-01-12\n"
         )
         path = _write_csv(csv_content)
         try:
@@ -121,9 +118,7 @@ class TestLoadSinan:
     def test_invalid_dates_coerced(self):
         """Invalid date strings should be coerced to NaT and removed."""
         csv_content = (
-            "DT_SIN_PRI,DT_NOTIFIC\n"
-            "NOT_A_DATE,2024-01-03\n"
-            "2024-01-01,2024-01-04\n"
+            "DT_SIN_PRI,DT_NOTIFIC\nNOT_A_DATE,2024-01-03\n2024-01-01,2024-01-04\n"
         )
         path = _write_csv(csv_content)
         try:
@@ -164,12 +159,19 @@ class TestPrepareMatrix:
 
     def test_output_shapes(self):
         """Check shapes of all returned arrays."""
-        df = pd.DataFrame({
-            "onset": pd.to_datetime([
-                "2024-01-01", "2024-01-01", "2024-01-02", "2024-01-05",
-            ]),
-            "delay": [0, 1, 2, 0],
-        })
+        df = pd.DataFrame(
+            {
+                "onset": pd.to_datetime(
+                    [
+                        "2024-01-01",
+                        "2024-01-01",
+                        "2024-01-02",
+                        "2024-01-05",
+                    ]
+                ),
+                "delay": [0, 1, 2, 0],
+            }
+        )
         nmat, dates, obs_t, obs_d, counts = prepare_matrix(df, max_delay=5)
         # 5 days (Jan 1-5), 6 delays (0-5)
         assert nmat.shape == (5, 6)
@@ -180,13 +182,19 @@ class TestPrepareMatrix:
 
     def test_matrix_values(self):
         """Verify correct counts are placed in the matrix."""
-        df = pd.DataFrame({
-            "onset": pd.to_datetime([
-                "2024-01-01", "2024-01-01", "2024-01-02",
-            ]),
-            "delay": [0, 1, 2],
-        })
-        nmat, dates, _, _, _ = prepare_matrix(df, max_delay=5)
+        df = pd.DataFrame(
+            {
+                "onset": pd.to_datetime(
+                    [
+                        "2024-01-01",
+                        "2024-01-01",
+                        "2024-01-02",
+                    ]
+                ),
+                "delay": [0, 1, 2],
+            }
+        )
+        nmat, _, _, _, _ = prepare_matrix(df, max_delay=5)
         # Jan 1 has 2 cases (delay 0 and 1)
         assert nmat[0, 0] == 1  # delay 0
         assert nmat[0, 1] == 1  # delay 1
@@ -197,34 +205,45 @@ class TestPrepareMatrix:
 
     def test_delay_clipped_to_max(self):
         """Delays > max_delay should be clipped."""
-        df = pd.DataFrame({
-            "onset": pd.to_datetime(["2024-01-01"]),
-            "delay": [50],
-        })
+        df = pd.DataFrame(
+            {
+                "onset": pd.to_datetime(["2024-01-01"]),
+                "delay": [50],
+            }
+        )
         nmat, _, _, _, _ = prepare_matrix(df, max_delay=10)
         # delay 50 → clipped to 10
         assert nmat[0, 10] == 1
 
     def test_sparse_outputs_have_correct_counts(self):
         """obs_t, obs_d, counts should correspond to non-zero cells."""
-        df = pd.DataFrame({
-            "onset": pd.to_datetime([
-                "2024-01-01", "2024-01-01", "2024-01-02", "2024-01-02",
-            ]),
-            "delay": [0, 0, 1, 2],
-        })
-        nmat, _, obs_t, obs_d, counts = prepare_matrix(df, max_delay=5)
+        df = pd.DataFrame(
+            {
+                "onset": pd.to_datetime(
+                    [
+                        "2024-01-01",
+                        "2024-01-01",
+                        "2024-01-02",
+                        "2024-01-02",
+                    ]
+                ),
+                "delay": [0, 0, 1, 2],
+            }
+        )
+        _, _, obs_t, obs_d, counts = prepare_matrix(df, max_delay=5)
         # Two cases on Jan 1 delay 0 → count should be 2 for that cell
         t0_mask = (obs_t == 0) & (obs_d == 0)
         assert counts[t0_mask][0] == 2
 
     def test_single_day(self):
         """Handle data with only one unique onset date."""
-        df = pd.DataFrame({
-            "onset": pd.to_datetime(["2024-06-01", "2024-06-01"]),
-            "delay": [0, 3],
-        })
-        nmat, dates, _, _, _ = prepare_matrix(df, max_delay=10)
+        df = pd.DataFrame(
+            {
+                "onset": pd.to_datetime(["2024-06-01", "2024-06-01"]),
+                "delay": [0, 3],
+            }
+        )
+        nmat, _, _, _, _ = prepare_matrix(df, max_delay=10)
         assert nmat.shape == (1, 11)
         assert nmat[0, 0] == 1
         assert nmat[0, 3] == 1
@@ -234,10 +253,12 @@ class TestRightTruncation:
     """Células observáveis x ausência estrutural (truncamento à direita)."""
 
     def _df(self):
-        return pd.DataFrame({
-            "onset": pd.to_datetime(["2024-01-01", "2024-01-03"]),
-            "delay": [0, 1],
-        })
+        return pd.DataFrame(
+            {
+                "onset": pd.to_datetime(["2024-01-01", "2024-01-03"]),
+                "delay": [0, 1],
+            }
+        )
 
     def test_observed_zeros_enter_likelihood(self):
         """Células vazias até o snapshot entram com contagem zero."""
@@ -253,7 +274,9 @@ class TestRightTruncation:
     def test_snapshot_cuts_earlier(self):
         """Snapshot explícito reduz o conjunto observável."""
         _, _, obs_t, obs_d, counts = prepare_matrix(
-            self._df(), max_delay=2, snapshot="2024-01-02",
+            self._df(),
+            max_delay=2,
+            snapshot="2024-01-02",
         )
         # 01/01: d0 (01/01) e d1 (02/01); 02/01: d0 (02/01); 03/01: nada
         assert len(counts) == 3
@@ -262,8 +285,9 @@ class TestRightTruncation:
     def test_backwards_compatible_sparse(self):
         """include_observed_zeros=False mantém o comportamento antigo."""
         _, _, _, _, counts = prepare_matrix(
-            self._df(), max_delay=2, include_observed_zeros=False,
+            self._df(),
+            max_delay=2,
+            include_observed_zeros=False,
         )
         assert len(counts) == 2
         assert (counts > 0).all()
-

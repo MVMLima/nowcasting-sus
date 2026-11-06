@@ -13,8 +13,11 @@ import numpy as np
 import pymc as pm
 import pytest
 
-from nowcasting_sus.models import NowcastingModel, NowcastingModelDOW, _build_prior_delays
-
+from nowcasting_sus.models import (
+    NowcastingModel,
+    NowcastingModelDOW,
+    _build_prior_delays,
+)
 
 # ── _build_prior_delays ─────────────────────────────────────────────────
 

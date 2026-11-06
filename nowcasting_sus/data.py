@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional, Tuple
 
 import numpy as np
 import pandas as pd
-
 
 __all__ = ["load_sinan", "prepare_matrix"]
 
@@ -47,9 +45,7 @@ def _validate_types(
             f"max_delay deve ser int, recebeu {type(max_delay).__name__}: {max_delay!r}"
         )
     if max_delay < 1 or max_delay > 365:
-        raise ValueError(
-            f"max_delay deve estar entre 1 e 365, recebeu {max_delay}"
-        )
+        raise ValueError(f"max_delay deve estar entre 1 e 365, recebeu {max_delay}")
     if min_year is not None:
         if not isinstance(min_year, (int, np.integer)):
             raise TypeError(
@@ -66,7 +62,7 @@ def load_sinan(
     date_onset: str = "DT_SIN_PRI",
     date_notif: str = "DT_NOTIFIC",
     max_delay: int = 30,
-    min_year: Optional[int] = None,
+    min_year: int | None = None,
 ) -> pd.DataFrame:
     """Carrega e valida dados SINAN para nowcasting.
 
@@ -111,9 +107,7 @@ def load_sinan(
         logger.warning("UTF-8 falhou, tentando encoding latin1...")
         df = pd.read_csv(filepath, low_memory=False, encoding="latin1")
     except Exception as exc:
-        raise ValueError(
-            f"Não foi possível ler o arquivo {filepath!r}: {exc}"
-        ) from exc
+        raise ValueError(f"Não foi possível ler o arquivo {filepath!r}: {exc}") from exc
 
     required = [date_onset, date_notif]
     missing = [c for c in required if c not in df.columns]
@@ -160,13 +154,15 @@ def load_sinan(
         ratio = n_invalid / before * 100
         logger.warning(
             "%d registros removidos por data inválida (%.1f%% do total)",
-            n_invalid, ratio,
+            n_invalid,
+            ratio,
         )
         if ratio > 50:
             logger.warning(
                 "Mais de 50%% dos registros têm datas inválidas. "
                 "Verifique o formato das colunas %r e %r.",
-                date_onset, date_notif,
+                date_onset,
+                date_notif,
             )
 
     # Calcular delay em dias
@@ -180,7 +176,8 @@ def load_sinan(
     if n_removed > 0:
         logger.info(
             "%d registros removidos por delay fora do intervalo [0, %d]",
-            n_removed, max_delay,
+            n_removed,
+            max_delay,
         )
 
     df = df.sort_values("onset").reset_index(drop=True)
@@ -190,9 +187,7 @@ def load_sinan(
         df = df[df["onset"].dt.year >= min_year]
         removed = before_year - len(df)
         if removed > 0:
-            logger.info(
-                "%d registros removidos por ano < %d", removed, min_year
-            )
+            logger.info("%d registros removidos por ano < %d", removed, min_year)
 
     if len(df) == 0:
         raise ValueError(
@@ -215,7 +210,7 @@ def prepare_matrix(
     max_delay: int = 30,
     snapshot: str | pd.Timestamp | None = None,
     include_observed_zeros: bool = True,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Prepara matriz onset × delay para o modelo nowcasting.
 
     Parameters
@@ -257,17 +252,13 @@ def prepare_matrix(
         Se colunas obrigatórias estiverem ausentes ou dados forem inválidos.
     """
     if not isinstance(df, pd.DataFrame):
-        raise TypeError(
-            f"df deve ser pd.DataFrame, recebeu {type(df).__name__}"
-        )
+        raise TypeError(f"df deve ser pd.DataFrame, recebeu {type(df).__name__}")
     if not isinstance(max_delay, (int, np.integer)):
         raise TypeError(
             f"max_delay deve ser int, recebeu {type(max_delay).__name__}: {max_delay!r}"
         )
     if max_delay < 1 or max_delay > 365:
-        raise ValueError(
-            f"max_delay deve estar entre 1 e 365, recebeu {max_delay}"
-        )
+        raise ValueError(f"max_delay deve estar entre 1 e 365, recebeu {max_delay}")
 
     required_cols = ["onset", "delay"]
     missing = [c for c in required_cols if c not in df.columns]
@@ -347,7 +338,9 @@ def prepare_matrix(
 
     if include_observed_zeros:
         t_grid, d_grid = np.meshgrid(
-            np.arange(T), np.arange(D), indexing="ij",
+            np.arange(T),
+            np.arange(D),
+            indexing="ij",
         )
         grade = dates[:, None] + np.arange(D).astype("timedelta64[D]")[None, :]
         observavel = grade <= np.datetime64(snapshot_ts)
@@ -369,7 +362,9 @@ def prepare_matrix(
     total = counts.sum()
     logger.info(
         "Matriz %d dias × %d delays (%s casos)",
-        T, D, _fmt_num(total),
+        T,
+        D,
+        _fmt_num(total),
     )
 
     return n_matrix, dates, obs_t, obs_d, counts
