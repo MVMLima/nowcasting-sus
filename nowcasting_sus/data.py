@@ -213,7 +213,7 @@ def load_sinan(
 def prepare_matrix(
     df: pd.DataFrame,
     max_delay: int = 30,
-    snapshot: Optional[str | pd.Timestamp] = None,
+    snapshot: str | pd.Timestamp | None = None,
     include_observed_zeros: bool = True,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Prepara matriz onset × delay para o modelo nowcasting.

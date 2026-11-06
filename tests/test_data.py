@@ -246,6 +246,7 @@ class TestRightTruncation:
         assert len(counts) == 8
         assert (counts == 0).sum() == 6
         assert counts.sum() == 2
+        assert nmat.shape == (3, 3)
         # a célula estruturalmente ausente não aparece
         assert not ((obs_t == 2) & (obs_d == 2)).any()
 
@@ -260,7 +261,7 @@ class TestRightTruncation:
 
     def test_backwards_compatible_sparse(self):
         """include_observed_zeros=False mantém o comportamento antigo."""
-        _, _, obs_t, obs_d, counts = prepare_matrix(
+        _, _, _, _, counts = prepare_matrix(
             self._df(), max_delay=2, include_observed_zeros=False,
         )
         assert len(counts) == 2
