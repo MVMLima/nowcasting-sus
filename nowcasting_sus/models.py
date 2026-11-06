@@ -334,6 +334,13 @@ class NowcastingModelDOW(NowcastingModel):
     Adiciona covariável de dia da semana com restrição soma-zero,
     capturando menor notificação em fins de semana.
 
+    Em série municipal de dengue (~20 casos/dia, atraso mediano de 3 dias) o
+    ganho medido sobre :class:`NowcastingModel` foi de 0,05 caso/dia de MAE em
+    5 cortes semanais (1.835 casos) e a cobertura do IC 95% ficou pior em dois
+    cortes. Nesse volume o efeito de dia da semana não se separa do ruído:
+    prefira o modelo base, ou compare os dois no seu próprio recorte antes de
+    adotar este. Evidência: issue #2 do repositório.
+
     Parameters
     ----------
     sigma_rw : float
