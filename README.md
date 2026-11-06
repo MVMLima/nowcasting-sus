@@ -94,7 +94,15 @@ Gera um boletim epidemiológico completo com:
 | Modelo | Descrição | Quando usar |
 |--------|-----------|-------------|
 | `NowcastingModel` | Random Walk 1ª ordem + Negative Binomial | Uso geral, padrão |
-| `NowcastingModelDOW` | RW1 + NB + efeito dia da semana (ZeroSumNormal) | Quando há padrão claro de menor notificação em fins de semana |
+| `NowcastingModelDOW` | RW1 + NB + efeito dia da semana (ZeroSumNormal) | Só quando houver ganho medido no seu dado |
+
+Medido em série municipal de dengue (Acre, 2026, ~20 casos/dia, atraso mediano de 3 dias):
+em 5 cortes semanais e 1.835 casos, o DOW ganhou **0,05 caso/dia** de MAE sobre o modelo base
+(5,81 contra 5,86) e piorou a cobertura do IC 95% em dois cortes — sem diferença prática. Com
+efeito de dia da semana fraco (segunda 1,12; demais dias entre 0,93 e 1,04) e esse volume, o
+modelo não separa dia da semana de ruído. **Comece pelo `NowcastingModel`;** se quiser checar
+se o DOW ajuda no seu caso, compare os dois no seu próprio recorte antes de adotar — a
+evidência completa está na [issue #2](https://github.com/MVMLima/nowcasting-sus/issues/2).
 
 ### Parâmetros Ajustáveis
 
