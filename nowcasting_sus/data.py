@@ -213,6 +213,8 @@ def load_sinan(
 def prepare_matrix(
     df: pd.DataFrame,
     max_delay: int = 30,
+    snapshot: Optional[str | pd.Timestamp] = None,
+    include_observed_zeros: bool = True,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Prepara matriz onset × delay para o modelo nowcasting.
 
@@ -222,6 +224,17 @@ def prepare_matrix(
         DataFrame com colunas ``onset`` e ``delay`` (saída de :func:`load_sinan`).
     max_delay : int
         Atraso máximo (default: 30). Deve estar entre 1 e 365.
+    snapshot : str | pd.Timestamp, optional
+        Data de extração da base. Células ``(onset, delay)`` cuja notificação
+        cairia depois dessa data não são observáveis (o caso pode existir e
+        ainda não ter sido digitado). Se omitido, usa a última notificação
+        presente no arquivo — conservador: nunca trata célula não observada
+        como zero.
+    include_observed_zeros : bool
+        Se ``True`` (default), as células observáveis que **não** têm registro
+        entram na verossimilhança com contagem zero. Elas são o que fixa o
+        nível da série: sem elas o modelo só vê as células preenchidas e
+        superestima o total, porque nada contradiz o excesso de massa.
 
     Returns
     -------
@@ -267,6 +280,14 @@ def prepare_matrix(
     if len(df) == 0:
         raise ValueError("DataFrame vazio — não é possível preparar a matriz.")
 
+    # Data de notificação de cada registro (o df pode trazer só onset + delay)
+    if "notif" in df.columns:
+        notif = pd.to_datetime(df["notif"]).dt.normalize()
+    else:
+        notif = (
+            pd.to_datetime(df["onset"]) + pd.to_timedelta(df["delay"], unit="D")
+        ).dt.normalize()
+
     # Criar índice de dias únicos de onset
     date_range = pd.date_range(
         start=df["onset"].min(),
@@ -302,10 +323,48 @@ def prepare_matrix(
     n_matrix = np.zeros((T, D), dtype=int)
     n_matrix[agg["t"].values, agg["d"].values] = agg["count"].values
 
-    # Vetores esparsos para o modelo
-    obs_t = agg["t"].values.astype(int)
-    obs_d = agg["d"].values.astype(int)
-    counts = agg["count"].values.astype(int)
+    # Vetores para o modelo — truncamento à direita
+    # ----------------------------------------------
+    # Numa base extraída em `snapshot`, a célula (t, d) só é observável se a
+    # notificação já poderia ter acontecido: onset_t + d <= snapshot.
+    # Depois dessa fronteira o caso pode existir e ainda não ter sido digitado,
+    # então é ausência estrutural — nunca zero.
+    if snapshot is None:
+        snapshot_ts = notif.max()
+        logger.info(
+            "Snapshot inferido da base: %s (última notificação presente)",
+            snapshot_ts.date(),
+        )
+    else:
+        snapshot_ts = pd.Timestamp(snapshot).normalize()
+        if snapshot_ts < notif.max():
+            logger.warning(
+                "snapshot=%s é anterior à última notificação do arquivo (%s); "
+                "células posteriores ao snapshot serão tratadas como não observadas.",
+                snapshot_ts.date(),
+                notif.max().date(),
+            )
+
+    if include_observed_zeros:
+        t_grid, d_grid = np.meshgrid(
+            np.arange(T), np.arange(D), indexing="ij",
+        )
+        grade = dates[:, None] + np.arange(D).astype("timedelta64[D]")[None, :]
+        observavel = grade <= np.datetime64(snapshot_ts)
+        obs_t = t_grid[observavel].astype(int)
+        obs_d = d_grid[observavel].astype(int)
+        counts = n_matrix[observavel].astype(int)
+        logger.info(
+            "Células observáveis até %s: %s de %s (%s com contagem zero)",
+            snapshot_ts.date(),
+            _fmt_num(len(counts)),
+            _fmt_num(T * D),
+            _fmt_num(int((counts == 0).sum())),
+        )
+    else:
+        obs_t = agg["t"].values.astype(int)
+        obs_d = agg["d"].values.astype(int)
+        counts = agg["count"].values.astype(int)
 
     total = counts.sum()
     logger.info(

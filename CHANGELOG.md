@@ -5,6 +5,21 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Não publicado]
+
+### Corrigido
+- `prepare_matrix()` ignorava as células observáveis com contagem **zero**: só as células
+  preenchidas entravam na verossimilhança, sem nada que contrabalançasse o nível da série.
+  Em série pequena o modelo inflava o total (no Acre/SRAG-2026: nowcast 9.265 contra 2.757
+  observados, 3,4×, com estimativa achatada em ~26,7 casos/dia para todos os últimos 14 dias).
+  Agora as células cuja notificação já poderia ter ocorrido (`onset + delay <= snapshot`) entram
+  com zero; as posteriores ao snapshot continuam fora, como ausência estrutural.
+
+### Adicionado
+- `prepare_matrix(..., snapshot=None, include_observed_zeros=True)`: data de extração da base
+  (default: última notificação do arquivo) e escape para o comportamento antigo.
+- CLI: `--snapshot AAAA-MM-DD` para fixar a data de extração — necessário para backtest.
+
 ## [1.1.0] - 2026-06-05
 
 ### Adicionado

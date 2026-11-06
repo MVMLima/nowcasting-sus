@@ -48,6 +48,10 @@ def main():
         help="Ano mínimo para filtrar registros (ex: 2024)",
     )
     parser.add_argument(
+        "--snapshot", default=None, metavar="AAAA-MM-DD",
+        help="Data de extração da base (default: última notificação do arquivo)",
+    )
+    parser.add_argument(
         "--date-onset", default="DT_SIN_PRI", metavar="COLUNA",
         help="Nome da coluna com data de início dos sintomas (default: DT_SIN_PRI)",
     )
@@ -118,7 +122,7 @@ def main():
             min_year=args.min_year,
         )
         nmat, dates, obs_t, obs_d, counts = prepare_matrix(
-            df, max_delay=args.max_delay,
+            df, max_delay=args.max_delay, snapshot=args.snapshot,
         )
 
         T, D = nmat.shape

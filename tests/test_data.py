@@ -228,3 +228,41 @@ class TestPrepareMatrix:
         assert nmat.shape == (1, 11)
         assert nmat[0, 0] == 1
         assert nmat[0, 3] == 1
+
+
+class TestRightTruncation:
+    """Células observáveis x ausência estrutural (truncamento à direita)."""
+
+    def _df(self):
+        return pd.DataFrame({
+            "onset": pd.to_datetime(["2024-01-01", "2024-01-03"]),
+            "delay": [0, 1],
+        })
+
+    def test_observed_zeros_enter_likelihood(self):
+        """Células vazias até o snapshot entram com contagem zero."""
+        nmat, _, obs_t, obs_d, counts = prepare_matrix(self._df(), max_delay=2)
+        # 3 dias x 3 delays = 9 células; a última (03/01 + 2 = 05/01) fica fora
+        assert len(counts) == 8
+        assert (counts == 0).sum() == 6
+        assert counts.sum() == 2
+        # a célula estruturalmente ausente não aparece
+        assert not ((obs_t == 2) & (obs_d == 2)).any()
+
+    def test_snapshot_cuts_earlier(self):
+        """Snapshot explícito reduz o conjunto observável."""
+        _, _, obs_t, obs_d, counts = prepare_matrix(
+            self._df(), max_delay=2, snapshot="2024-01-02",
+        )
+        # 01/01: d0 (01/01) e d1 (02/01); 02/01: d0 (02/01); 03/01: nada
+        assert len(counts) == 3
+        assert ((obs_t == 0) & (obs_d == 2)).sum() == 0
+
+    def test_backwards_compatible_sparse(self):
+        """include_observed_zeros=False mantém o comportamento antigo."""
+        _, _, obs_t, obs_d, counts = prepare_matrix(
+            self._df(), max_delay=2, include_observed_zeros=False,
+        )
+        assert len(counts) == 2
+        assert (counts > 0).all()
+
