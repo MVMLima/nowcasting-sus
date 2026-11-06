@@ -8,6 +8,18 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [Não publicado]
 
 ### Corrigido
+- `load_sinan()` lia o CSV sem `sep=`, assumindo vírgula. O export padrão do SINAN usa `;`,
+  então qualquer arquivo real quebrava com `ParserError: Expected 1 fields in line N, saw 2`;
+  o erro só aparecia na leitura, sem indicar a causa. O separador agora é detectado pelo
+  cabeçalho (`;`, `,`, tabulação ou `|`) e pode ser forçado por `sep=`.
+- `load_sinan()` interpretava `dd/mm/aaaa` com `dayfirst=False` e só tentava `dayfirst=True`
+  quando **mais de 50%** da coluna virava `NaT`. Com dia ≤ 12 o parser aceitava
+  `05/04/2026` como **4 de maio**, sem erro. Agora o padrão `dd/mm/aaaa` é detectado e lido
+  com `dayfirst=True`; datas ISO continuam no caminho default.
+- `plot_panel()` estourava `shape mismatch` quando `delay_posterior` vinha de
+  `.stack(sample=("chain", "draw"))`, isto é, com forma `(D, amostras)` em vez de
+  `(amostras, D)`. Passa a aceitar as duas orientações e a falhar com mensagem explícita
+  quando nenhuma dimensão corresponde a `D`.
 - `prepare_matrix()` ignorava as células observáveis com contagem **zero**: só as células
   preenchidas entravam na verossimilhança, sem nada que contrabalançasse o nível da série.
   Em série pequena o modelo inflava o total (no Acre/SRAG-2026: nowcast 9.265 contra 2.757
@@ -19,6 +31,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - `prepare_matrix(..., snapshot=None, include_observed_zeros=True)`: data de extração da base
   (default: última notificação do arquivo) e escape para o comportamento antigo.
 - CLI: `--snapshot AAAA-MM-DD` para fixar a data de extração — necessário para backtest.
+- `load_sinan(..., sep=None)`: separador de campo explícito, sobrepondo a detecção automática.
 
 ## [1.1.0] - 2026-06-05
 
