@@ -5,7 +5,7 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Não publicado]
+## [1.2.0] - 2026-11-06
 
 ### Corrigido
 - `load_sinan()` lia o CSV sem `sep=`, assumindo vírgula. O export padrão do SINAN usa `;`,

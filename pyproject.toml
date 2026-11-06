@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nowcasting-sus"
-version = "1.1.0"
+version = "1.2.0"
 description = "Nowcasting bayesiano para dados do SINAN — correção de atraso de notificação em tempo real"
 readme = "README.md"
 license = "MIT"
