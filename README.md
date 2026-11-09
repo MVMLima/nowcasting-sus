@@ -69,7 +69,7 @@ import pandas as pd
 
 modelo_dow = NowcastingModelDOW()
 dow = pd.to_datetime(dates).dayofweek.values  # 0=segunda .. 6=domingo
-idata = modelo_dow.fit(obs_t, obs_d, counts, T=T, D=nmat.shape[1], dow=dow)
+idata = modelo_dow.fit(obs_t, obs_d, counts, T=nmat.shape[0], D=nmat.shape[1], dow=dow)
 
 # Ver efeito de cada dia da semana
 print(modelo_dow.get_dow_effect())
