@@ -23,3 +23,10 @@ Thumbs.db
 *.png
 *.html
 *.csv
+
+# Dados e saídas locais (snapshots do SINAN, InferenceData, revisões)
+/dados/
+/output_*/
+*.nc
+*.patch
+/uv.lock
