@@ -5,7 +5,7 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Não publicado]
+## [1.2.1] - 2026-11-14
 
 ### Corrigido
 - `get_summary()` tentava `az.waic()` e `az.loo(..., scale="deviance")` sem checar a versão.
@@ -17,11 +17,18 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `arviz.to_netcdf` e o backend NetCDF não vem nas dependências. Foi adicionada
   `save_inference(idata, caminho)`, que usa `arviz.to_netcdf` quando existe e, no ArviZ 1.x,
   grava pelo próprio objeto — com mensagem explícita quando faltar backend.
+- `examples/example_real.py` aplicava `np.exp()` sobre `get_nowcast_ci()`, que já devolve a
+  escala original (casos/dia): o gráfico e o boletim do exemplo saíam com valores exponenciados
+  duas vezes. O caminho do arquivo de entrada também deixou de ser fixo (`banco.csv`) — agora
+  vem por argumento.
 
 ### Adicionado
 - `save_inference(idata, caminho)`, exportada na API pública (`from nowcasting_sus import save_inference`).
 - Extra `[netcdf]` (`h5netcdf`, `h5py`) para quem precisa gravar `InferenceData`.
 - Limite superior `arviz<2` — a série 1.x é suportada, mas uma futura 2.0 não deve entrar sem teste.
+- `examples/colab_nowcasting.py` e `examples/colab_nowcasting.ipynb`: pipeline completo para
+  Google Colab, aceitando DBF ou CSV do SINAN, com a tabela de erros conhecidos do ambiente
+  (ArviZ 1.x, backend NetCDF, DBF no `load_sinan`).
 
 ## [1.2.0] - 2026-11-06
 
