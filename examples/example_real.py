@@ -1,8 +1,11 @@
-"""Exemplo completo: nowcasting com dados reais do SINAN."""
+"""Exemplo completo: nowcasting com dados reais do SINAN.
+
+Uso:
+    python example_real.py dados_sinan.csv
+"""
 
 import sys
 
-import numpy as np
 import pandas as pd
 
 sys.path.insert(0, "..")
@@ -12,14 +15,19 @@ from nowcasting_sus.models import NowcastingModel, NowcastingModelDOW
 from nowcasting_sus.plot import plot_panel
 from nowcasting_sus.report import generate_report
 
+if len(sys.argv) < 2:
+    sys.exit("uso: python example_real.py <arquivo.csv com DT_SIN_PRI e DT_NOTIFIC>")
+CAMINHO = sys.argv[1]
+
 # 1. Carregar dados
-df = load_sinan("banco.csv")
+df = load_sinan(CAMINHO)
 nmat, dates, obs_t, obs_d, counts = prepare_matrix(df)
 
 # 2. Modelo base
 print("\n=== Modelo Base ===")
 modelo = NowcastingModel()
 idata = modelo.fit(obs_t, obs_d, counts, T=nmat.shape[0], D=nmat.shape[1])
+# get_nowcast_ci() devolve a escala original (casos/dia) — não aplicar exp()
 median, low, high = modelo.get_nowcast_ci()
 
 # Delay posterior
@@ -28,9 +36,9 @@ delay_p = idata.posterior["delay_p"].mean(dim=["chain", "draw"]).values
 # 3. Gráfico
 fig = plot_panel(
     nmat,
-    np.exp(median),
-    np.exp(low),
-    np.exp(high),
+    median,
+    low,
+    high,
     delay_p,
     dates,
     save_to="nowcasting_resultados.png",
@@ -40,9 +48,9 @@ print("[ok] Gráfico: nowcasting_resultados.png")
 # 4. Relatório HTML
 generate_report(
     nmat,
-    np.exp(median),
-    np.exp(low),
-    np.exp(high),
+    median,
+    low,
+    high,
     dates,
     save_to="boletim_nowcasting.html",
 )
