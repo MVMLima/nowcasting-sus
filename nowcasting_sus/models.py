@@ -3,15 +3,90 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Any
 
 import arviz as az
 import numpy as np
 import pymc as pm
 
-__all__ = ["NowcastingModel", "NowcastingModelDOW"]
+__all__ = ["NowcastingModel", "NowcastingModelDOW", "save_inference"]
 
 logger = logging.getLogger("nowcasting_sus.models")
+
+
+def _metrica_arviz(nome: str, idata: Any) -> dict[str, float] | None:
+    """Lê WAIC/LOO do ArviZ tolerando as diferenças entre as séries 0.x e 1.x.
+
+    O ArviZ 1.x removeu ``waic`` e mudou a assinatura de ``loo`` (que deixou de
+    aceitar ``scale``). A ausência da métrica é esperada e não é falha do ajuste:
+    por isso o registro é em nível ``debug`` e o retorno é ``None``.
+    """
+    func = getattr(az, nome, None)
+    if func is None:
+        logger.debug("%s indisponível no ArviZ %s", nome.upper(), az.__version__)
+        return None
+
+    resultado = None
+    try:
+        resultado = func(idata, scale="deviance")
+    except TypeError:  # ArviZ 1.x: loo() não aceita scale
+        try:
+            resultado = func(idata)
+        except Exception as exc:
+            logger.debug("Não foi possível calcular %s: %s", nome.upper(), exc)
+            return None
+    except Exception as exc:
+        logger.debug("Não foi possível calcular %s: %s", nome.upper(), exc)
+        return None
+
+    chaves = ("waic", "se", "p_waic") if nome == "waic" else ("loo", "se", "p_loo")
+    try:
+        return {c: float(getattr(resultado, c)) for c in chaves}
+    except Exception as exc:
+        logger.debug("Formato inesperado em %s: %s", nome.upper(), exc)
+        return None
+
+
+def save_inference(idata: Any, caminho: str | Path) -> str:
+    """Grava um ``InferenceData`` em NetCDF de forma compatível com ArviZ 0.x e 1.x.
+
+    O ArviZ 1.x removeu ``arviz.to_netcdf``; nesse caso a gravação é feita pelo
+    próprio objeto, o que exige os backends ``h5netcdf`` e ``h5py``
+    (``pip install "nowcasting-sus[netcdf]"``).
+
+    Parameters
+    ----------
+    idata : arviz.InferenceData
+        Resultado de ``fit()``.
+    caminho : str or pathlib.Path
+        Arquivo de destino (``.nc``).
+
+    Returns
+    -------
+    str
+        Caminho gravado.
+
+    Raises
+    ------
+    ImportError
+        Se a versão do ArviZ não oferecer ``to_netcdf`` e faltar backend NetCDF.
+    """
+    destino = Path(caminho)
+    destino.parent.mkdir(parents=True, exist_ok=True)
+
+    if hasattr(az, "to_netcdf"):
+        az.to_netcdf(idata, str(destino))
+        return str(destino)
+
+    try:
+        idata.to_netcdf(str(destino), engine="h5netcdf")
+    except (ImportError, ValueError) as exc:
+        raise ImportError(
+            "Gravar o InferenceData neste ambiente exige os backends NetCDF. "
+            'Instale com: pip install "nowcasting-sus[netcdf]"'
+        ) from exc
+    return str(destino)
 
 
 def _build_prior_delays(max_delay: int, alpha_scale: float = 3.0) -> np.ndarray:
@@ -281,29 +356,9 @@ class NowcastingModel:
             summary["r_hat"] = None
             summary["n_eff"] = None
 
-        # WAIC
-        try:
-            waic = az.waic(self.idata_, scale="deviance")
-            summary["waic"] = {
-                "waic": float(waic.waic),
-                "se": float(waic.se),
-                "p_waic": float(waic.p_waic),
-            }
-        except Exception as exc:
-            logger.warning("Não foi possível calcular WAIC: %s", exc)
-            summary["waic"] = None
-
-        # LOO
-        try:
-            loo = az.loo(self.idata_, scale="deviance")
-            summary["loo"] = {
-                "loo": float(loo.loo),
-                "se": float(loo.se),
-                "p_loo": float(loo.p_loo),
-            }
-        except Exception as exc:
-            logger.warning("Não foi possível calcular LOO: %s", exc)
-            summary["loo"] = None
+        # WAIC e LOO — dependem da versão do ArviZ e de log_likelihood no idata
+        summary["waic"] = _metrica_arviz("waic", self.idata_)
+        summary["loo"] = _metrica_arviz("loo", self.idata_)
 
         # Divergências
         try:

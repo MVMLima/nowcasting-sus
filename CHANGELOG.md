@@ -5,6 +5,24 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Não publicado]
+
+### Corrigido
+- `get_summary()` tentava `az.waic()` e `az.loo(..., scale="deviance")` sem checar a versão.
+  No ArviZ 1.x `waic` foi removido e `loo` deixou de aceitar `scale`, então toda chamada
+  emitia dois avisos de falha — mesmo quando o ajuste estava bom. As duas métricas agora
+  passam por `_metrica_arviz()`, que devolve `None` em silêncio (nível `debug`) quando a
+  versão instalada não oferece a métrica.
+- Instalação limpa deixava o pacote inutilizável para gravar resultados: o ArviZ 1.x removeu
+  `arviz.to_netcdf` e o backend NetCDF não vem nas dependências. Foi adicionada
+  `save_inference(idata, caminho)`, que usa `arviz.to_netcdf` quando existe e, no ArviZ 1.x,
+  grava pelo próprio objeto — com mensagem explícita quando faltar backend.
+
+### Adicionado
+- `save_inference(idata, caminho)`, exportada na API pública (`from nowcasting_sus import save_inference`).
+- Extra `[netcdf]` (`h5netcdf`, `h5py`) para quem precisa gravar `InferenceData`.
+- Limite superior `arviz<2` — a série 1.x é suportada, mas uma futura 2.0 não deve entrar sem teste.
+
 ## [1.2.0] - 2026-11-06
 
 ### Corrigido

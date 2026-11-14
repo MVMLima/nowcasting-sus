@@ -27,6 +27,7 @@ __all__ = [
     "plot_nowcasting",
     "plot_panel",
     "prepare_matrix",
+    "save_inference",
     "setup_logging",
 ]
 
@@ -84,6 +85,14 @@ def setup_logging(
 _logger = setup_logging()
 
 from nowcasting_sus.data import load_sinan, prepare_matrix  # noqa: E402
-from nowcasting_sus.models import NowcastingModel, NowcastingModelDOW  # noqa: E402
-from nowcasting_sus.plot import plot_dow_effect, plot_nowcasting, plot_panel  # noqa: E402
+from nowcasting_sus.models import (  # noqa: E402
+    NowcastingModel,
+    NowcastingModelDOW,
+    save_inference,
+)
+from nowcasting_sus.plot import (  # noqa: E402
+    plot_dow_effect,
+    plot_nowcasting,
+    plot_panel,
+)
 from nowcasting_sus.report import generate_report  # noqa: E402

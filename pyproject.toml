@@ -23,7 +23,7 @@ dependencies = [
     "pandas>=2.0",
     "matplotlib>=3.7",
     "pymc>=5.0",
-    "arviz>=0.16",
+    "arviz>=0.16,<2",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -52,6 +52,10 @@ dev = [
 test = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
+]
+netcdf = [
+    "h5netcdf>=1.0",
+    "h5py>=3.8",
 ]
 
 [project.urls]
